@@ -1,37 +1,19 @@
-import User from "../models/User.js";
-import bcrypt from "bcryptjs";
+// db.js
+import mongoose from 'mongoose';
+import 'dotenv/config'; // Carga las variables de entorno desde .env
 
-/**
- * Crea un usuario en la base de datos si no existe.
- * @param {string} username - Nombre de usuario
- * @param {string} password - Contraseña en texto plano
- * @param {string} role - Rol del usuario (opcional, por defecto "user")
- */
-export async function createUser(username, password, role = "user") {
-  try {
-    // Verificar si ya existe
-    const existingUser = await User.findOne({ username });
-    if (existingUser) {
-      console.log(`⚡ Usuario "${username}" ya existe`);
-      return existingUser; // Devuelve el usuario existente
+
+const conectarDB = async () => {
+    try {
+        await mongoose.connect(process.env.MONGO_URI, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        });
+        console.log('✅ Conectado a MongoDB');
+    } catch (error) {
+        console.error('❌ Error al conectar Mongo:', error);
+        process.exit(1); // Termina el proceso si no hay conexión
     }
+};
 
-    // Encriptar contraseña
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Crear nuevo usuario
-    const newUser = new User({
-      username,
-      password: hashedPassword,
-      role,
-    });
-
-    await newUser.save();
-    console.log(`✅ Usuario "${username}" creado con éxito`);
-    return newUser;
-
-  } catch (err) {
-    console.error("❌ Error creando usuario:", err);
-    throw err; // Para que el llamador pueda manejar el error
-  }
-}
+export default conectarDB;
